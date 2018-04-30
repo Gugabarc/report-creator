@@ -1,0 +1,1 @@
+ReportDTO(salesmanTotal=2, customerTotal=2, mostExpensiveSaleId=10, worstSalesman=null)

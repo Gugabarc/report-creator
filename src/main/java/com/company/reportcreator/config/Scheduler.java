@@ -1,4 +1,4 @@
-package com.company.reportcreator;
+package com.company.reportcreator.config;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -27,7 +27,7 @@ public class Scheduler {
 	@Autowired
 	private Job job;
 	
-	@Scheduled(cron="*/5 * * * * *")
+	@Scheduled(cron="*/100000 * * * * *")
 	public void scheduler() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong("time", System.currentTimeMillis()).toJobParameters();
 		try {
