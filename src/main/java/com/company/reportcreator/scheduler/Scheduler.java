@@ -27,21 +27,23 @@ public class Scheduler {
 	@Autowired
 	private Job job;
 	
-	@Scheduled(cron="*/20 * * * * *")
+	@Scheduled(cron="*/5 * * * * *")
 	public void scheduler() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong("time", System.currentTimeMillis()).toJobParameters();
+		
 		try {
 			JobExecution execution = launcher.run(job, jobParameters);
 			
-			log.info("Execution status", execution.getStatus());
+			log.info("Execution status {}", execution.getStatus());
+			
 		} catch (JobExecutionAlreadyRunningException e) {
-			log.error("", e);
+			log.error("JobExecutionAlreadyRunningException", e);
 		} catch (JobRestartException e) {
-			log.error("", e);
+			log.error("JobRestartException", e);
 		} catch (JobInstanceAlreadyCompleteException e) {
-			log.error("", e);
+			log.error("JobInstanceAlreadyCompleteException", e);
 		} catch (JobParametersInvalidException e) {
-			log.error("", e);
+			log.error("JobParametersInvalidException", e);
 		}
 	}
 }

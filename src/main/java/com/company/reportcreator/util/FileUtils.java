@@ -1,128 +1,52 @@
 package com.company.reportcreator.util;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FilenameFilter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.NumberUtils;
-
-import com.company.reportcreator.model.BaseEntity;
-import com.company.reportcreator.model.Customer;
-import com.company.reportcreator.model.Item;
-import com.company.reportcreator.model.Sale;
-import com.company.reportcreator.model.Salesman;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FileUtils {
+	
+	public static File findFirst(String dirName, String fileExtension) {
+		File[] files = findAll(dirName, fileExtension);
 
-    private CSVReader csvReader;
-    private FileReader fileReader;
-    private File file;
-
-    public FileUtils(File file) {
-    	if(file == null) {
-    		throw new IllegalArgumentException("Null file");
-    	}
-        this.file = file;
-    }
-
-    public BaseEntity readLine() {
-    	BaseEntity entity = null;
-        try {
-            if (csvReader == null) initReader();
-            
-            String[] line = csvReader.readNext();
-            
-            if (line == null) return null;
-            
-            if("001".equals(line[0])) {
-            	entity = Salesman.builder()
-            				.cpf(line[1])
-            				.name(line[2])
-            				.build();
-            	log.info("Created salesman. {}", entity);
-            	
-            } else if("002".equals(line[0])) {
-            	entity = Customer.builder()
-            				.cnpj(line[1])
-            				.name(line[2])
-            				.businessArea(line[3])
-            				.build();
-            	log.info("Created customer. {}", entity);
-            	
-            } else if("003".equals(line[0])) {
-            	entity = Sale.builder()
-            				.id(line[1])
-            				.items(parseItems(line[2]))
-            				.salesmanName(line[3])
-            				.build();
-            	
-            	log.info("Created sale. {}", entity);
-            }
-            
-            return entity;
-            
-        } catch (Exception e) {
-            log.error("Error while reading line in file: " + this.file.getName());
-            return null;
-        }
-    }
-    
-    public List<Item> parseItems(String itemsString){
-    	List<Item> items = new ArrayList<>();
-    	
-    	itemsString = StringUtils.remove(itemsString, "[");
-    	itemsString = StringUtils.remove(itemsString, "]");
-    	
-    	String[] itemsArray = StringUtils.split(itemsString, ",");
-    	
-    	for (int i = 0; i < itemsArray.length; i++) {
-			String itemString = itemsArray[i];
-			
-			String[] itemPart = StringUtils.split(itemString, "-");
-			
-			Item item = Item.builder()
-							.id(itemPart[0])
-							.quantity(NumberUtils.parseNumber(itemPart[1], Integer.class))
-							.price(NumberUtils.parseNumber(itemPart[2], Double.class))
-							.build();
-			
-			items.add(item);
+		if (ArrayUtils.isNotEmpty(files)) {
+			return files[0];
 		}
-    	
-    	return items;
-    }
 
-    private void initReader() throws Exception {
-        if (fileReader == null) fileReader = new FileReader(file);
-        
-        if (csvReader == null) {
-        	CSVParser parser = new CSVParserBuilder()
-									.withSeparator('ç')
-									.build();
+		return null;
+	}
+	
+	public static File[] findAll(String dirName, String fileExtension) {
+		File dir = new File(dirName);
 
-        	csvReader = new CSVReaderBuilder(fileReader)
-									.withCSVParser(parser)
-									.build();
-        }
-    }
-
-    public void closeReader() {
-        try {
-            csvReader.close();
-            fileReader.close();
-        } catch (IOException e) {
-        	log.error("Error while closing reader.");
-        }
-    }
+		return dir.listFiles(new FilenameFilter() {
+			public boolean accept(File dir, String filename) {
+				return filename.endsWith(fileExtension);
+			}
+		});
+	}
+	
+	public static String removeFileExtension(String filename) {
+		if(filename == null) {
+			throw new IllegalArgumentException("filename is null");
+		}
+		
+		Pattern pattern = Pattern.compile("^(.*)(\\..*)$");
+		Matcher matcher = pattern.matcher(filename);
+		
+		if(matcher.find()) {
+			return StringUtils.remove(filename, matcher.group(2));
+		}
+		log.warn("Filename paramter doesn`t match filename pattern, returning same value");
+		
+		return filename;
+	}
 
 }

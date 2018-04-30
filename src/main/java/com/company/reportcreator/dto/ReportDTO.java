@@ -15,5 +15,10 @@ public class ReportDTO implements Serializable {
 	private int customerTotal;
 	private String mostExpensiveSaleId;
 	private String worstSalesmanName; 
+	
+	public String formattedReport() {
+		return "Summary\n" + "Salesman Count: " + salesmanTotal + "\nCustomer Count: " + customerTotal 
+				+ "\nMost Expensive Sale Id: " + mostExpensiveSaleId + "\nWorst Salesman Name: " + worstSalesmanName;
+	}
 
 }

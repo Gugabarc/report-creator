@@ -27,91 +27,88 @@ import com.company.reportcreator.step.LinesWriter;
 @EnableBatchProcessing
 public class TaskletsConfig {
 
-    @Autowired private JobBuilderFactory jobs;
+	@Autowired
+	private JobBuilderFactory jobs;
 
-    @Autowired private StepBuilderFactory steps;
+	@Autowired
+	private StepBuilderFactory steps;
 
-    @Bean
-    public JobRepository jobRepository() throws Exception {
-        MapJobRepositoryFactoryBean factory = new MapJobRepositoryFactoryBean();
-        factory.setTransactionManager(transactionManager());
-        return (JobRepository) factory.getObject();
-    }
+	@Bean
+	public JobRepository jobRepository() throws Exception {
+		MapJobRepositoryFactoryBean factory = new MapJobRepositoryFactoryBean();
+		factory.setTransactionManager(transactionManager());
+		return (JobRepository) factory.getObject();
+	}
 
-    @Bean
-    public PlatformTransactionManager transactionManager() {
-        return new ResourcelessTransactionManager();
-    }
+	@Bean
+	public PlatformTransactionManager transactionManager() {
+		return new ResourcelessTransactionManager();
+	}
 
-    @Bean
-    public JobLauncher jobLauncher() throws Exception {
-        SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
-        jobLauncher.setJobRepository(jobRepository());
-        return jobLauncher;
-    }
+	@Bean
+	public JobLauncher jobLauncher() throws Exception {
+		SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+		jobLauncher.setJobRepository(jobRepository());
+		return jobLauncher;
+	}
 
-    @Bean
-    public LinesReader linesReader() {
-        return new LinesReader();
-    }
-
-    @Bean
-    public LinesProcessor linesProcessor() {
-        return new LinesProcessor();
-    }
-
-    @Bean
-    public LinesWriter linesWriter() {
-        return new LinesWriter();
-    }
-
-    @Bean
-    protected Step readLines() {
-        return steps
-          .get("readLines")
-          .tasklet(linesReader())
-          .build();
-    }
-
-    @Bean
-    protected Step processLines() {
-        return steps
-          .get("processLines")
-          .tasklet(linesProcessor())
-          .build();
-    }
-
-    @Bean
-    protected Step writeLines() {
-        return steps
-          .get("writeLines")
-          .tasklet(linesWriter())
-          .build();
-    }
-    
-    @Bean
-    public Job job() {
-  	  Flow flow = new FlowBuilder<Flow>("flow1")
-  	    .start(decision())
-  	    .on(FlowExecutionStatus.COMPLETED.toString())
-  	    	.to(readLines())
-  	    	.next(processLines())
-  	    	.next(writeLines())
-  	    .from(decision())
-  	    .on(FlowExecutionStatus.STOPPED.toString())
-  	    	.stop()
-  	    .end();
-  	  
-      return jobs
-        .get("taskletsJob")
-        .start(flow)
-  	    .end()
-  	    .build();
-    }
-
-    @Bean
-	protected FlowDecision decision() {
+	@Bean
+	public FlowDecision decision() {
 		return new FlowDecision();
 	}
 
+	@Bean
+	public LinesReader linesReader() {
+		return new LinesReader();
+	}
+
+	@Bean
+	public LinesProcessor linesProcessor() {
+		return new LinesProcessor();
+	}
+
+	@Bean
+	public LinesWriter linesWriter() {
+		return new LinesWriter();
+	}
+
+	@Bean
+	protected Step readLines() {
+		return steps.get("readLines")
+				.tasklet(linesReader())
+				.build();
+	}
+
+	@Bean
+	protected Step processLines() {
+		return steps.get("processLines")
+				.tasklet(linesProcessor())
+				.build();
+	}
+
+	@Bean
+	protected Step writeLines() {
+		return steps.get("writeLines")
+				.tasklet(linesWriter())
+				.build();
+	}
+
+	@Bean
+	public Job job() {
+		Flow flow = new FlowBuilder<Flow>("flow1")
+				.start(decision())
+				.on(FlowExecutionStatus.COMPLETED.toString())
+					.to(readLines())
+					.next(processLines())
+					.next(writeLines())
+				.from(decision())
+				.on(FlowExecutionStatus.STOPPED.toString())
+					.stop()
+				.end();
+
+		return jobs.get("taskletsJob")
+				.start(flow)
+				.end()
+				.build();
+	}
 }

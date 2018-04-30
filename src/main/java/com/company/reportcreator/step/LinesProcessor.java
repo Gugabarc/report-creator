@@ -3,6 +3,7 @@ package com.company.reportcreator.step;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -24,63 +25,63 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LinesProcessor implements Tasklet, StepExecutionListener {
 
-    private List<BaseEntity> lines;
-    
-    private ReportDTO reportDTO;
+	private List<BaseEntity> entities;
+	private ReportDTO reportDTO;
 
-    @Override
-    public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    	int salesmanTotal = 0;
+	@SuppressWarnings("unchecked")
+	@Override
+	public void beforeStep(StepExecution stepExecution) {
+		ExecutionContext executionContext = stepExecution
+												.getJobExecution()
+												.getExecutionContext();
+
+		this.entities = (List<BaseEntity>) executionContext.get("entities");
+	}
+
+	@Override
+	public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+		log.info("Starting to summarize data for report");
+		
+		int salesmanTotal = 0;
 		int customerTotal = 0;
 		List<Sale> sales = new ArrayList<>();
-		
-		for (BaseEntity line : lines) {
-			if(line instanceof Salesman) {
+
+		for (BaseEntity line : entities) {
+			if (line instanceof Salesman) {
 				salesmanTotal++;
-				
-			} else if(line instanceof Customer) {
+
+			} else if (line instanceof Customer) {
 				customerTotal++;
-				
-			} else if(line instanceof Sale) {
+
+			} else if (line instanceof Sale) {
 				Sale sale = (Sale) line;
 				sales.add(sale);
 			}
 		}
-		
-		sales.sort((s1, s2) -> s2.getTotalItemsPrice().compareTo(s1.getTotalItemsPrice()));
-		
+
 		this.reportDTO = ReportDTO.builder()
 								.customerTotal(customerTotal)
 								.salesmanTotal(salesmanTotal)
-								.mostExpensiveSaleId(sales.get(0).getId())
-								.worstSalesmanName((Iterables.getLast(sales).getSalesmanName()))
 								.build();
-		
-		log.info("{}", reportDTO);
-		
-        return RepeatStatus.FINISHED;
-    }
 
-    @SuppressWarnings("unchecked")
+		if(CollectionUtils.isNotEmpty(sales)) {
+			sales.sort((s1, s2) -> s2.getTotalItemsPrice().compareTo(s1.getTotalItemsPrice()));
+			
+			this.reportDTO.setMostExpensiveSaleId(sales.get(0).getId());
+			this.reportDTO.setWorstSalesmanName((Iterables.getLast(sales).getSalesmanName()));
+		}
+
+		log.info("Report finished{}", reportDTO);
+
+		return RepeatStatus.FINISHED;
+	}
+
 	@Override
-    public void beforeStep(StepExecution stepExecution) {
-        ExecutionContext executionContext = stepExecution
-										          .getJobExecution()
-										          .getExecutionContext();
-        
-        this.lines = (List<BaseEntity>) executionContext.get("lines");
-        
-        log.debug("Lines Processor initialized.");
-    }
+	public ExitStatus afterStep(StepExecution stepExecution) {
+		ExecutionContext executionContext = stepExecution.getJobExecution().getExecutionContext();
 
-    @Override
-    public ExitStatus afterStep(StepExecution stepExecution) {
-    	ExecutionContext executionContext = stepExecution
-		          .getJobExecution()
-		          .getExecutionContext();
-    	
-    	executionContext.put("reportDTO", reportDTO);
-    	
-        return ExitStatus.COMPLETED;
-    }
+		executionContext.put("reportDTO", reportDTO);
+
+		return ExitStatus.COMPLETED;
+	}
 }
