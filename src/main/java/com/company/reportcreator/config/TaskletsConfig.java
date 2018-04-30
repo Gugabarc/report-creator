@@ -5,6 +5,9 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
@@ -14,6 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import com.company.reportcreator.step.FlowDecision;
+import com.company.reportcreator.step.LinesProcessor;
+import com.company.reportcreator.step.LinesReader;
+import com.company.reportcreator.step.LinesWriter;
 
 @Configuration
 @EnableBatchProcessing
@@ -80,16 +88,30 @@ public class TaskletsConfig {
           .tasklet(linesWriter())
           .build();
     }
-
+    
     @Bean
     public Job job() {
-        return jobs
-          .get("taskletsJob")
-          .start(readLines())
-          .next(processLines())
-          .next(writeLines())
-          .build();
+  	  Flow flow = new FlowBuilder<Flow>("flow1")
+  	    .start(decision())
+  	    .on(FlowExecutionStatus.COMPLETED.toString())
+  	    	.to(readLines())
+  	    	.next(processLines())
+  	    	.next(writeLines())
+  	    .from(decision())
+  	    .on(FlowExecutionStatus.STOPPED.toString())
+  	    	.stop()
+  	    .end();
+  	  
+      return jobs
+        .get("taskletsJob")
+        .start(flow)
+  	    .end()
+  	    .build();
     }
 
+    @Bean
+	protected FlowDecision decision() {
+		return new FlowDecision();
+	}
 
 }

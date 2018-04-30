@@ -1,4 +1,4 @@
-package com.company.reportcreator.config;
+package com.company.reportcreator.util;
 
 import java.io.File;
 import java.io.FileReader;
@@ -24,13 +24,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FileUtils {
 
-    private String filename;
     private CSVReader csvReader;
     private FileReader fileReader;
     private File file;
 
-    public FileUtils(String fileName) {
-        this.filename = fileName;
+    public FileUtils(File file) {
+    	if(file == null) {
+    		throw new IllegalArgumentException("Null file");
+    	}
+        this.file = file;
     }
 
     public BaseEntity readLine() {
@@ -70,7 +72,7 @@ public class FileUtils {
             return entity;
             
         } catch (Exception e) {
-            log.error("Error while reading line in file: " + this.filename);
+            log.error("Error while reading line in file: " + this.file.getName());
             return null;
         }
     }
@@ -101,12 +103,6 @@ public class FileUtils {
     }
 
     private void initReader() throws Exception {
-        ClassLoader classLoader = this
-						          .getClass()
-						          .getClassLoader();
-        if (file == null) file = new File(classLoader
-									          .getResource(filename)
-									          .getFile());
         if (fileReader == null) fileReader = new FileReader(file);
         
         if (csvReader == null) {

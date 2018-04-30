@@ -1,10 +1,8 @@
-package com.company.reportcreator.config;
+package com.company.reportcreator.step;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -19,6 +17,7 @@ import com.company.reportcreator.model.BaseEntity;
 import com.company.reportcreator.model.Customer;
 import com.company.reportcreator.model.Sale;
 import com.company.reportcreator.model.Salesman;
+import com.google.common.collect.Iterables;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,11 +53,10 @@ public class LinesProcessor implements Tasklet, StepExecutionListener {
 								.customerTotal(customerTotal)
 								.salesmanTotal(salesmanTotal)
 								.mostExpensiveSaleId(sales.get(0).getId())
+								.worstSalesmanName((Iterables.getLast(sales).getSalesmanName()))
 								.build();
 		
 		log.info("{}", reportDTO);
-		
-		FileUtils.writeStringToFile(new File("./data/out/out.txt"), reportDTO.toString(), "UTF-8");
 		
         return RepeatStatus.FINISHED;
     }

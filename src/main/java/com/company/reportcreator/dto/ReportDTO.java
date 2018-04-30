@@ -2,8 +2,6 @@ package com.company.reportcreator.dto;
 
 import java.io.Serializable;
 
-import com.company.reportcreator.model.Salesman;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,6 +14,6 @@ public class ReportDTO implements Serializable {
 	private int salesmanTotal;
 	private int customerTotal;
 	private String mostExpensiveSaleId;
-	private Salesman worstSalesman; 
+	private String worstSalesmanName; 
 
 }
