@@ -108,3 +108,6 @@ Tarefas para uma futura versão:
 - Tornar a cron de agendamento parametrizável no arquivo de properties
 - Acrescentar mais testes unitários
 - Flexibilizar a estrutura onde está parser do arquivo de entrada, possibilitando o acréscimo de outros formatos (json, xml, etc.)
+- Realizar e automatizar testes utilizando docker
+- Avaliar performance com grandes volumes de dados
+- Avaliar como a aplicação se comporta tendo jobs simultâneos (executando um primeiro, e iniciar a execução de um segundo job agendado)
